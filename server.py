@@ -59,8 +59,10 @@ class Serveridor:
 		#s.send(msg_final)
 		print("SENDOK2");
 
-	def mensagem_tipo_5(self, clienteId):
-		pass
+	def sendMessage(self, clienteId, dados, socket, message_pack, msg):
+		if socket not in self.writable:
+			self.writable.append(socket)
+		self.message_queues[socket].put(dados + message_pack + msg)
 
 	def conexao(self):
 		connection, client_address = self.con.accept()
@@ -77,18 +79,18 @@ def main():
 	clienteId = 0
 	i = 0
 	while servidor.readable:
-		print("ENTREI AQUI")
+		#print("ENTREI AQUI")
 	#	print(sys.stderr, '\nwaiting for the next event')
 		readable, writable, exceptional = select.select(servidor.readable, servidor.writable,
             servidor.readable)
 		for s in readable:
-			print("Dentro1")	
+			#print("Dentro1")	
 			if s is servidor.con:
 				print("Conectando socket")
 				servidor.conexao()
 			else:
 				#print("S = ", s)
-				print("Entrei aqui")
+				#print("Entrei aqui")
 				data = s.recv(8)
 				tipoMensagem = unpack("!H", data[0:2])[0]
 				origem = unpack("!H", data[2:4])[0]
@@ -109,25 +111,46 @@ def main():
 						clienteId = clienteId + 1
 				if tipoMensagem == 4:
 					continue
-				if tipoMensagem == 5: 
-					print("Nova funcao")
-					print("origem = ", origem)
-					servidor.sendOk(origem,sequencia)
+				if tipoMensagem == 5:
+					#print("TO HERE")
+					if destino == 20:
+						broadcast = 1
+					else:
+						broadcast = 0
+						msg_len = s.recv(2)
+						msg_len_u = unpack("!H", msg_len)[0]
+						print("MSG-LEN = ", msg_len_u)
+						mensagem = s.recv(msg_len_u)
+						print("MENSAGEM = ", mensagem)
+						servidor.sendOk(origem,sequencia)
+						#print("VERIFIQUEI CONEXAO")
+						v = servidor.verificarConexao(destino)
+						if v == -1:
+							#print("uai?")
+							#sendErro
+							pass
+						else:
+							#print("entrei no else")
+							servidor.sendMessage(origem, data, v, msg_len, mensagem)
+					#print("Nova funcao")
+					#print("origem = ", origem)
 		for s in writable:
-			print("Dentro2")
+			#print("Dentro2")
 			try:
-				print("dentro do Try")
+			#	print("dentro do Try")
 				#print("S = ", s)
+				print("mandando msg")
 				next_msg = servidor.message_queues[s].get_nowait()#se coloco get(True) ou get(), funciona.
 				print(next_msg)
+				print("FOI")
 			except:
-				print("Except")
+			#	print("Except")
 				servidor.writable.remove(s)
 			else:
-				print("Else!")
+			#	print("Else!")
 				s.send(next_msg)
 		for s in exceptional:
-			print("Dentro3")
+			#print("Dentro3")
 			servidor.readable.remove(s)
 			if s in servidor.writable:
 				servidor.writable.remove(s)

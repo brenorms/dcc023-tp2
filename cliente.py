@@ -35,6 +35,31 @@ class Cliente:
 	def flwMessage(self):
 		pass
 
+	def receiveOk(self):
+		data = self.con.recv(8)
+		print("travei aqui")
+		testeTipo = unpack("!H", data[:2])[0]
+		testeOrigem = unpack("!H", data[2:4])[0]
+		testeDestino = unpack("!H", data[4:6])[0]#id estara aqui pq o destino do servidor foi o cliente
+		testeSequencia = unpack("!H", data[6:8])[0]
+		if testeTipo == 1:
+			return True
+		else:
+			return False
+
+	def receiveMessage(self):
+		data = self.con.recv(8)
+		testeTipo = unpack("!H", data[:2])[0]
+		testeOrigem = unpack("!H", data[2:4])[0]
+		testeDestino = unpack("!H", data[4:6])[0]#id estara aqui pq o destino do servidor foi o cliente
+		testeSequencia = unpack("!H", data[6:8])[0]
+		data2 = self.con.recv(2)
+		print("DATA = ", data2)
+		len_msg = unpack("!H", data2)[0]
+		print("LEN = ", len_msg)
+		data3 = self.con.recv(len_msg)
+		print(data3.decode()) 
+
 	def testeInf(self):
 		while 1:
 			teste = 0
@@ -43,20 +68,19 @@ class Cliente:
 				msg = input("mensagem: ")
 			tipoMensagem = pack("!H", teste)
 			origem = pack("!H", self.id)
-			destino = pack("!H", servidor_dst)#destino do cliente e' o servidor
+			destino = pack("!H", self.id)#destino do cliente e' o servidor
 			sequencia = pack("!H", self.num_sequencia)
 			msg_final = tipoMensagem + origem + destino + sequencia
 			msg_final = msg_final + pack("!H", len(msg))
-			msg_final = msg_final + msg
+			print("LEN-MSG = ", len(msg))
+			#msg_final = msg_final + msg
+			msg = msg.encode()
+			print(msg)
 			print(self.id)
-			self.con.send(msg_final)
+			self.con.send(msg_final + msg)
 			print("vim parar aqui")
-			data = self.con.recv(8)
-			print("travei aqui")
-			testeTipo = unpack("!H", data[:2])[0]
-			testeOrigem = unpack("!H", data[2:4])[0]
-			testeDestino = unpack("!H", data[4:6])[0]#id estara aqui pq o destino do servidor foi o cliente
-			testeSequencia = unpack("!H", data[6:8])[0]
+			testeSucess = self.receiveOk()
+			self.receiveMessage()
 
 def main():
 	IP = sys.argv[1]
