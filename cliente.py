@@ -21,7 +21,9 @@ class Cliente:
 		msg_final = tipoMensagem + origem + destino + sequencia
 		print(msg_final)
 		self.con.send(msg_final)
+		print("To aqui")
 		data = self.con.recv(8)
+		print("To aqui2222")
 		testeTipo = unpack("!H", data[:2])[0]
 		testeOrigem = unpack("!H", data[2:4])[0]
 		testeDestino = unpack("!H", data[4:6])[0]#id estara aqui pq o destino do servidor foi o cliente
@@ -33,9 +35,28 @@ class Cliente:
 	def flwMessage(self):
 		pass
 
-	def teste(self):
-		pass
-
+	def testeInf(self):
+		while 1:
+			teste = 0
+			while teste != 5:
+				teste = int(input("novo teste: "))
+				msg = input("mensagem: ")
+			tipoMensagem = pack("!H", teste)
+			origem = pack("!H", self.id)
+			destino = pack("!H", servidor_dst)#destino do cliente e' o servidor
+			sequencia = pack("!H", self.num_sequencia)
+			msg_final = tipoMensagem + origem + destino + sequencia
+			msg_final = msg_final + pack("!H", len(msg))
+			msg_final = msg_final + msg
+			print(self.id)
+			self.con.send(msg_final)
+			print("vim parar aqui")
+			data = self.con.recv(8)
+			print("travei aqui")
+			testeTipo = unpack("!H", data[:2])[0]
+			testeOrigem = unpack("!H", data[2:4])[0]
+			testeDestino = unpack("!H", data[4:6])[0]#id estara aqui pq o destino do servidor foi o cliente
+			testeSequencia = unpack("!H", data[6:8])[0]
 
 def main():
 	IP = sys.argv[1]
@@ -43,6 +64,7 @@ def main():
 	connection_address = (IP, PORT)
 	clientezim = Cliente(connection_address)
 	clientezim.oiMessage()
+	clientezim.testeInf()
 
 if __name__ == "__main__":
 	main()
