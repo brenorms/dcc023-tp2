@@ -4,7 +4,7 @@ import sys
 import queue as Queue
 from struct import pack,unpack
 
-clienteId = 0
+clienteId = 0#talvez comecar com 1 porque quando a mensagem tem destino 0 deve ser boradcast e nao o cliente 0
 mensagem_queue = {}
 
 class Serveridor:
@@ -79,8 +79,6 @@ def main():
 	clienteId = 0
 	i = 0
 	while servidor.readable:
-		#print("ENTREI AQUI")
-	#	print(sys.stderr, '\nwaiting for the next event')
 		readable, writable, exceptional = select.select(servidor.readable, servidor.writable,
             servidor.readable)
 		for s in readable:
@@ -89,8 +87,6 @@ def main():
 				print("Conectando socket")
 				servidor.conexao()
 			else:
-				#print("S = ", s)
-				#print("Entrei aqui")
 				data = s.recv(8)
 				tipoMensagem = unpack("!H", data[0:2])[0]
 				origem = unpack("!H", data[2:4])[0]
@@ -110,9 +106,14 @@ def main():
 						servidor.sendOk(clienteId,sequencia)
 						clienteId = clienteId + 1
 				if tipoMensagem == 4:
-					continue
+					if origem == destino:
+						socket = servidor.verificarConexao(origem)
+						servidor.readable.remove(s)#socket ou s
+						print(servidor.readable)
+					else:
+						print("Origem != Destino, seu idiota!")
+					
 				if tipoMensagem == 5:
-					#print("TO HERE")
 					if destino == 20:
 						broadcast = 1
 					else:
@@ -123,17 +124,12 @@ def main():
 						mensagem = s.recv(msg_len_u)
 						print("MENSAGEM = ", mensagem)
 						servidor.sendOk(origem,sequencia)
-						#print("VERIFIQUEI CONEXAO")
 						v = servidor.verificarConexao(destino)
 						if v == -1:
-							#print("uai?")
-							#sendErro
+							#servidor.sendErro()
 							pass
 						else:
-							#print("entrei no else")
 							servidor.sendMessage(origem, data, v, msg_len, mensagem)
-					#print("Nova funcao")
-					#print("origem = ", origem)
 				if tipoMensagem == 6:
 					servidor.sendOk(origem, sequencia)
 					novo_tipo_mensagem = pack("!H", 7)
@@ -141,6 +137,8 @@ def main():
 					dados_restantes = novo_tipo_mensagem + dados_restantes
 					dados_restantes = dados_restantes + pack("!H", len(servidor.connected_sockets))
 					socket_destino = servidor.verificarConexao(destino)
+					if socket_destino not in servidor.connected_sockets:
+						continue
 					if socket_destino not in servidor.writable:
 						servidor.writable.append(socket_destino)
 					servidor.message_queues[socket_destino].put(dados_restantes)
@@ -149,28 +147,21 @@ def main():
 						ids = pack("!H", clientes_ids)
 						servidor.message_queues[socket_destino].put(ids)
 		for s in writable:
-			#print("Dentro2")
 			try:
-			#	print("dentro do Try")
-				#print("S = ", s)
 				print("mandando msg")
 				next_msg = servidor.message_queues[s].get_nowait()#se coloco get(True) ou get(), funciona.
 				print(next_msg)
 				print("FOI")
 			except:
-			#	print("Except")
 				servidor.writable.remove(s)
 			else:
-			#	print("Else!")
 				s.send(next_msg)
 		for s in exceptional:
-			#print("Dentro3")
 			servidor.readable.remove(s)
 			if s in servidor.writable:
 				servidor.writable.remove(s)
 			s.close()
 			del servidor.message_queues[s]
-
 
 if __name__ == "__main__":
 	main()

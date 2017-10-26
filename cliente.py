@@ -82,7 +82,7 @@ class Cliente:
 	def testeInf(self):
 		while 1:
 			teste = 0
-			while teste != 6:
+			while teste != 4:
 				teste = int(input("novo teste: "))
 				msg = input("mensagem: ")
 			tipoMensagem = pack("!H", teste)
@@ -100,7 +100,7 @@ class Cliente:
 			self.con.send(msg_final)
 			print("vim parar aqui")
 			testeSucess = self.receiveOk()
-			self.receiveCList()
+			#self.receiveCList()
 
 def main():
 	IP = sys.argv[1]
