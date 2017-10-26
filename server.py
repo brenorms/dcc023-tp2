@@ -134,6 +134,20 @@ def main():
 							servidor.sendMessage(origem, data, v, msg_len, mensagem)
 					#print("Nova funcao")
 					#print("origem = ", origem)
+				if tipoMensagem == 6:
+					servidor.sendOk(origem, sequencia)
+					novo_tipo_mensagem = pack("!H", 7)
+					dados_restantes = data[2:8]
+					dados_restantes = novo_tipo_mensagem + dados_restantes
+					dados_restantes = dados_restantes + pack("!H", len(servidor.connected_sockets))
+					socket_destino = servidor.verificarConexao(destino)
+					if socket_destino not in servidor.writable:
+						servidor.writable.append(socket_destino)
+					servidor.message_queues[socket_destino].put(dados_restantes)
+					for clientes_ids, val in servidor.connected_sockets.items():
+						print(clientes_ids)
+						ids = pack("!H", clientes_ids)
+						servidor.message_queues[socket_destino].put(ids)
 		for s in writable:
 			#print("Dentro2")
 			try:
