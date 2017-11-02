@@ -22,6 +22,7 @@ class Serveridor:
 
 	def verificarConexao(self, clienteId):
 		if clienteId in self.connected_sockets:
+			print("consegui achar")
 			return self.connected_sockets[clienteId]
 		else:
 			return -1
@@ -87,7 +88,9 @@ def main():
 				print("Conectando socket")
 				servidor.conexao()
 			else:
+				print("recebendo")
 				data = s.recv(8)
+				print(data)
 				tipoMensagem = unpack("!H", data[0:2])[0]
 				origem = unpack("!H", data[2:4])[0]
 				destino = unpack("!H", data[4:6])[0]
@@ -104,10 +107,12 @@ def main():
 					if(origem == 0):
 						servidor.connected_sockets[clienteId] = s
 						servidor.sendOk(clienteId,sequencia)
+						print("Passei or aqui")
 						clienteId = clienteId + 1
 				if tipoMensagem == 4:
 					if origem == destino:
 						socket = servidor.verificarConexao(origem)
+						servidor.sendOk(origem, sequencia)
 						servidor.readable.remove(s)#socket ou s
 						print(servidor.readable)
 					else:
@@ -131,21 +136,29 @@ def main():
 						else:
 							servidor.sendMessage(origem, data, v, msg_len, mensagem)
 				if tipoMensagem == 6:
+					print("entrei!!")
 					servidor.sendOk(origem, sequencia)
 					novo_tipo_mensagem = pack("!H", 7)
 					dados_restantes = data[2:8]
 					dados_restantes = novo_tipo_mensagem + dados_restantes
 					dados_restantes = dados_restantes + pack("!H", len(servidor.connected_sockets))
+					print("Dados restantes =", dados_restantes)
 					socket_destino = servidor.verificarConexao(destino)
-					if socket_destino not in servidor.connected_sockets:
-						continue
+					print("socket Dest = ", socket_destino)
+					# if socket_destino not in servidor.connected_sockets:
+					# 	print("entrei")
+					# 	print(socket_destino)
+					# 	print(servidor.connected_sockets)
+					# 	continue
 					if socket_destino not in servidor.writable:
+						print("entrei tb")
 						servidor.writable.append(socket_destino)
 					servidor.message_queues[socket_destino].put(dados_restantes)
 					for clientes_ids, val in servidor.connected_sockets.items():
-						print(clientes_ids)
+						print("Id cliente = ", clientes_ids)
 						ids = pack("!H", clientes_ids)
 						servidor.message_queues[socket_destino].put(ids)
+						print("coloquei a mensagem na queue!!")
 		for s in writable:
 			try:
 				print("mandando msg")
