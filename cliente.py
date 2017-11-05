@@ -37,7 +37,12 @@ class Cliente:
 		print("id", self.id)
 
 	def send_message_1(self):
-		pass
+		tipoMensagem = pack("!H", 1)
+		origem = pack("!H", self.id)
+		destino = pack("!H", self.id)
+		sequencia = pack("!H", self.num_sequencia)
+		msg_final = tipoMensagem + origem + destino + sequencia
+		self.con.send(msg_final)
 
 	def send_message_2(self):
 		pass
@@ -129,6 +134,7 @@ class Cliente:
 		#print("LEN = ", len_msg)
 		data3 = self.con.recv(len_msg)
 		print("Dados recebidos: "+data3.decode()) 
+		self.send_message_1()
 
 	def receive4(self):
 		#print("Fechando conexao com cliente!")
@@ -171,6 +177,8 @@ class Cliente:
 						self.receive4()
 					elif msg_type == 1:
 						print("OK")
+					elif msg_type == 2:
+						print("ERRO")
 				elif s == sys.stdin:
 					if inicial != True:
 						print("Digite qual tipo de mensagem deseja enviar 4/5/6")
