@@ -104,17 +104,17 @@ class Cliente:
 		pass
 
 	def receiveOk(self):
-		print("tentando receber")
+		print("Tentando receber Ok...")
 		data = self.con.recv(8)
 		testeTipo = unpack("!H", data[:2])[0]
 		testeOrigem = unpack("!H", data[2:4])[0]
 		testeDestino = unpack("!H", data[4:6])[0]#id estara aqui pq o destino do servidor foi o cliente
 		testeSequencia = unpack("!H", data[6:8])[0]
 		if testeTipo == 1:
-			print("OK")
+			print("Recebi OK!")
 			return True
 		else:
-			print("Nao OK")
+			print("-----ERRO AO RECEBER OK-----")
 			return False
 
 	def receiveMessage(self):
