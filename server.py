@@ -47,7 +47,7 @@ class Serveridor:
 		#print("Mensagem Salva = ", self.message_queues[s].get())
 		#s.send(msg_final)
 		#print("Enviando MSG OK, BOA SORTE SOLDADO!")
-		print("OK "+str(clienteId))
+		#print("OK "+str(clienteId))
 
 	def sendOk2(self, clienteId, sequencia):
 		tipoMensagem = pack("!H", 1)
@@ -80,7 +80,7 @@ class Serveridor:
 		if s not in self.writable:
 			self.writable.append(s)
 		self.message_queues[s].put(msg)
-		print("ERRO ", destino)
+		#print("ERRO ", destino)
 
 	def conexao(self):
 		connection, client_address = self.con.accept()
@@ -92,7 +92,7 @@ class Serveridor:
 def main():
 	sleeptime=4
 	PORT = int(sys.argv[1])
-	ADRESS = ('150.164.6.23', PORT)
+	ADRESS = ("", PORT)
 	servidor = Serveridor(ADRESS)
 	broadcast = 0
 	i = 0
@@ -120,25 +120,24 @@ def main():
 					except:
 						destino = -1
 				if tipoMensagem == 1:
-					print("Received OK "+str(origem))
+					print("Recebido OK de "+str(origem))
 				if tipoMensagem == 3:
 					#print("Recebi mensagem hi")
-					print("OI "+str(origem))
+					print("Recebido Oi de", servidor.clienteId)
 					if(origem == 0):
 						servidor.connected_sockets[servidor.clienteId] = s
+						print("Enviando Ok para", servidor.clienteId, "...")
 						servidor.sendOk(servidor.clienteId,sequencia)
 						#print("Passei or aqui")
 						servidor.clienteId = servidor.clienteId + 1
 				if tipoMensagem == 4:
-					if origem == destino:
-						socket = servidor.verificarConexao(origem)
-						servidor.sendOk(origem, sequencia)
-						servidor.readable.remove(s)#socket ou s
-						del servidor.connected_sockets[origem]
-						print("FLW "+str(origem))
-					else:
-						print("Origem != Destino, seu idiota!")
-					
+					#if origem == destino:
+					socket = servidor.verificarConexao(origem)
+					servidor.sendOk(origem, sequencia)
+					servidor.readable.remove(s)#socket ou s
+					del servidor.connected_sockets[origem]
+					print("Recebido Flw de "+str(origem))
+					print("Enviando Ok para", str(origem), "...")	
 				if tipoMensagem == 5:
 					if destino == 0:
 						broadcast = True
@@ -151,20 +150,26 @@ def main():
 					#print("MENSAGEM = ", mensagem)
 					#time.sleep(6)
 					sleeptime = 0
-					print("MSG from "+str(origem)+" to "+str(destino)+": "+str(mensagem))
 					if destino==0:
+						print("Enviando Ok para", origem, "...")
+						servidor.sendOk(origem,sequencia)
 						for i in range(1, servidor.clienteId):
-							v = servidor.verificarConexao(i)
-							if v != -1:
-							#v.setblocking(1)
-							#v.settimeout(5)
-								servidor.sendMessage(origem, data, v, msg_len, mensagem)	
+							if i != origem:
+								v = servidor.verificarConexao(i)
+								if v != -1:
+									print("MSG from "+str(origem)+" to ", i, ": "+str(mensagem))
+								#v.setblocking(1)
+								#v.settimeout(5)
+									servidor.sendMessage(origem, data, v, msg_len, mensagem)	
 					else:
 						v = servidor.verificarConexao(destino)
 						if v == -1:
+							print("ERRO de", origem, "!!!")
 							servidor.sendErro(origem, sequencia)
 							pass
 						else:
+							print("Enviando Ok para", origem, "...")
+							print("MSG from "+str(origem)+" to "+str(destino)+": "+str(mensagem))
 							servidor.sendOk(origem,sequencia)
 							servidor.sendMessage(origem, data, v, msg_len, mensagem)
 				if tipoMensagem == 6:
@@ -177,10 +182,10 @@ def main():
 					
 					dados_novos = novo_tipo_mensagem + origem1 + destino1 + sequencia1 + pack("!H", len(servidor.connected_sockets))
 					socket_destino = servidor.verificarConexao(origem)
-					print("CREQ "+str(origem))
+					#print("CREQ "+str(origem))
 					if socket_destino not in servidor.writable:
 						servidor.writable.append(socket_destino)
-					print("Send ",origem, "     ", dados_novos, " para id ", origem) 
+					print("Send ",origem, " ", dados_novos, " para id ", origem) 
 					for clientes_ids, val in servidor.connected_sockets.items():
 						ids = pack("!H", clientes_ids)
 						dados_novos = dados_novos + ids

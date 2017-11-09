@@ -141,7 +141,9 @@ class Cliente:
 		len_msg = unpack("!H", data2)[0]
 		#print("LEN = ", len_msg)
 		data3 = self.con.recv(len_msg)
-		print("Dados recebidos: "+data3.decode()) 
+		#print("Dados recebidos: "+data3.decode())
+		print() 
+		print("Mensagem de", testeOrigem, ":", data3.decode())
 		self.send_message_1()
 
 	def receive4(self):
@@ -161,10 +163,16 @@ class Cliente:
 		#print("DATA = ", data2)
 		len_msg = unpack("!H", data2)[0]
 		#print("LEN = ", len_msg)
+		print()
+		print("Clientes conectados: ", end=' ')
 		for i in range(0,len_msg):
 			data3 = self.con.recv(2)
 			unpack_int = unpack("!H", data3)[0]
-			print(unpack_int)
+			print(unpack_int, end=' ')
+		print(end="\n\n")
+
+	def is_ascii(self, s):
+		return all(ord(c) < 128 for c in s)
 
 	def testeInf(self):
 		inicial = True
@@ -194,10 +202,17 @@ class Cliente:
 					flag = True
 					print("Digite qual tipo de mensagem deseja enviar: 4/5/6")
 				elif s == sys.stdin:
-					tipo = int(sys.stdin.readline())
+					tipo = sys.stdin.readline()
+					while(tipo != "4\n" and tipo != "5\n" and tipo != "6\n"):
+						print("Digite um tipo de mensagem valido: 4/5/6")
+						tipo = sys.stdin.readline()
+					tipo = int(tipo)
 					if tipo == 5:
 						print("Qual mensagem deseja enviar? ")
 						msg = sys.stdin.readline()
+						while (not self.is_ascii(msg) or msg == "\n"):
+							print("Qual mensagem deseja enviar? ")
+							msg = sys.stdin.readline()
 						print("Digite qual o id do destino da mensagem: ")
 						destination = int(sys.stdin.readline())
 						self.send_message_5(msg, destination)
